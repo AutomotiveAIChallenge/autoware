@@ -68,19 +68,15 @@ repositories:
     url: https://github.com/tier4/velodyne_vls.git
     version: 55dffdf3b3ef889e149977dc6ab1da124b5176c9
   # sensor_kit
-  sensor_kit/sample_sensor_kit_launch:
+  sensor_kit/aip_launcher:
     type: git
-    url: https://github.com/autowarefoundation/sample_sensor_kit_launch.git
-    version: 06330e6b07449a3609ced295c0a9ce6a1805ef99
+    url: https://github.com/tier4/aip_launcher.git
+    version: tier4/universe
   sensor_kit/external/awsim_sensor_kit_launch: # TODO: Integrate into sample_sensor_kit_launch
     type: git
     url: https://github.com/RobotecAI/awsim_sensor_kit_launch.git
     version: a1f5993407ffeb4abcf97a49cd1b4034768d97b4
   # vehicle
-  vehicle/sample_vehicle_launch:
-    type: git
-    url: https://github.com/autowarefoundation/sample_vehicle_launch.git
-    version: 157238ca77de7b0a59f71a0b28f456741fab3ca2
   vehicle/external/pacmod_interface:
     type: git
     url: https://github.com/tier4/pacmod_interface.git
@@ -88,10 +84,10 @@ repositories:
   # param
   param/autoware_individual_params:
     type: git
-    url: https://github.com/autowarefoundation/autoware_individual_params.git
-    version: 09082b6cbb99a840c53878a190616d35a40b569f
+    url: https://github.com/tier4/autoware_individual_params.git
+    version: main
   # golfcart
   vehicle/golfcart_description:
     type: git
     url: https://github.com/tier4/golfcart_description.git
-    version: main   
+    version: main
