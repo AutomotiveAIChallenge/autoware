@@ -90,8 +90,8 @@ repositories:
     type: git
     url: https://github.com/autowarefoundation/autoware_individual_params.git
     version: 09082b6cbb99a840c53878a190616d35a40b569f
-  #--- vehicle
+  # golfcart
   vehicle/golfcart_description:
-    type: git
-    url: git@github.com:tier4/golfcart_description.git
+    url: https://github.com/tier4/golfcart_description.git
+    main
     version: main   
