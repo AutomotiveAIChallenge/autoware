@@ -88,10 +88,10 @@ repositories:
   # param
   param/autoware_individual_params:
     type: git
-    url: https://github.com/autowarefoundation/autoware_individual_params.git
-    version: 09082b6cbb99a840c53878a190616d35a40b569f
+    url: https://github.com/tier4/autoware_individual_params.ai_challenge
+    version: ai_challenge/v2023.07.0
   # golfcart
   vehicle/golfcart_description:
     type: git
     url: https://github.com/tier4/golfcart_description.git
-    version: main   
+    version: main
