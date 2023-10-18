@@ -9,7 +9,7 @@ WORKDIR /autoware
 
 ## Build and change permission for runtime data conversion
 RUN source /opt/ros/"$ROS_DISTRO"/setup.bash \
-  && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install \
   && find /autoware/install -type d -exec chmod 777 {} \;
 
 ## Create entrypoint

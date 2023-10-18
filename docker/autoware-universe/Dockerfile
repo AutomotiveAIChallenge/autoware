@@ -65,7 +65,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ## Build and change permission for runtime data conversion
 RUN source /opt/ros/"$ROS_DISTRO"/setup.bash \
-  && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install\
   && find /autoware/install -type d -exec chmod 777 {} \;
 
 # hadolint ignore=DL3006
@@ -102,7 +102,6 @@ RUN --mount=type=ssh \
   && vcs import src < autoware.repos \
   && rosdep update \
   && DEBIAN_FRONTEND=noninteractive rosdep install -y --ignore-src --from-paths src --rosdistro "$ROS_DISTRO" \
-  && rm -rf src \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
