@@ -59,14 +59,6 @@ repositories:
     type: git
     url: https://github.com/tier4/sensor_component_description.git
     version: 475857daeb4c4883ab0295336713364b326e8278
-  sensor_component/external/tamagawa_imu_driver:
-    type: git
-    url: https://github.com/tier4/tamagawa_imu_driver.git
-    version: de4bf6be79aa2968cf2f62e0ebe1ff8a5797e6ad
-  sensor_component/external/velodyne_vls:
-    type: git
-    url: https://github.com/tier4/velodyne_vls.git
-    version: 55dffdf3b3ef889e149977dc6ab1da124b5176c9
   # sensor_kit
   sensor_kit/sample_sensor_kit_launch:
     type: git
@@ -81,10 +73,6 @@ repositories:
     type: git
     url: https://github.com/autowarefoundation/sample_vehicle_launch.git
     version: 157238ca77de7b0a59f71a0b28f456741fab3ca2
-  vehicle/external/pacmod_interface:
-    type: git
-    url: https://github.com/tier4/pacmod_interface.git
-    version: 3db50a2abc68576308289cc84d83d14376144d64
   # param
   param/autoware_individual_params:
     type: git
