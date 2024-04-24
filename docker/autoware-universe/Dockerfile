@@ -1,6 +1,7 @@
 # hadolint global ignore=DL3006,DL3008
 ARG BASE_IMAGE
 
+# ==============================================================================
 FROM $BASE_IMAGE as devel
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG ROS_DISTRO
@@ -23,7 +24,7 @@ WORKDIR /autoware
 
 # Set up development environment
 RUN --mount=type=ssh \
-  ./setup-dev-env.sh -y $SETUP_ARGS universe \
+  ./setup-dev-env.sh -y --runtime $SETUP_ARGS universe \
   && pip uninstall -y ansible ansible-core \
   && mkdir src \
   && vcs import src < autoware.repos \
@@ -48,18 +49,25 @@ RUN mkdir -p /etc/OpenCL/vendors \
   && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd \
   && chmod 644 /etc/OpenCL/vendors/nvidia.icd
 
-# Create entrypoint
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" > /etc/bash.bashrc
-CMD ["/bin/bash"]
-
+# ==============================================================================
 FROM devel as prebuilt
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Build and change permission for runtime data conversion
 RUN source /opt/ros/"$ROS_DISTRO"/setup.bash \
   && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  && find /autoware/install -type d -exec chmod 777 {} \; \
-  && rm -rf /autoware/build /autoware/src
+  && find /autoware/install -type d -exec chmod 777 {} \;
+
+# Create entrypoint
+RUN echo "source /autoware/install/setup.bash" > /etc/bash.bashrc
+CMD ["/bin/bash"]
+
+# ==============================================================================
+FROM devel as runtime
+
+# Remove setup files and copy install directory
+RUN rm -rf /autoware/*
+COPY --from=prebuilt /autoware/install/ /autoware/install/
 
 # Create entrypoint
 RUN echo "source /autoware/install/setup.bash" > /etc/bash.bashrc
