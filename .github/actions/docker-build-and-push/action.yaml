@@ -54,6 +54,7 @@ runs:
       with:
         # Checking event_name for https://github.com/autowarefoundation/autoware/issues/2796
         push: ${{ github.event_name == 'schedule' || github.ref_name == github.event.repository.default_branch || github.event_name == 'push'}}
+        targets: runtime
         files: |
           docker/${{ inputs.bake-target }}/docker-bake.hcl
           ${{ steps.meta-runtime.outputs.bake-file }}
