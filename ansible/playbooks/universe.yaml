@@ -33,7 +33,6 @@
     - role: autoware.dev_env.autoware_core
     - role: autoware.dev_env.ccache
       when: install_devel == 'true'
-    - role: autoware.dev_env.plotjuggler
     - role: autoware.dev_env.pre_commit
       when: install_devel == 'true'
     - role: autoware.dev_env.ros2
