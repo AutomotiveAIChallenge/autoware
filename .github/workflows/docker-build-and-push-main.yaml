@@ -9,13 +9,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name:
-          - no-nvidia
+        arch: [amd64, arm64]
+        name: [no-nvidia]
         include:
-          - name: no-nvidia
+          - arch: amd64
+            platform: linux/amd64
+            env_file: amd64.env
             base_image_env: base_image
-            setup-args: --no-nvidia
-            additional-tag-suffix: ""
+            setup_args: --no-nvidia
+            tag_suffix: -amd64
+          - arch: arm64
+            platform: linux/arm64
+            env_file: arm64.env
+            base_image_env: base_image
+            setup_args: --no-nvidia
+            tag_suffix: -arm64
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -25,22 +34,22 @@ jobs:
 
       - name: Load env
         run: |
-          cat amd64.env | sed -e "s/^\s*//" -e "/^#/d" >> $GITHUB_ENV
-          if [ "$(uname -m)" = "aarch64" ]; then
-            cat arm64.env | sed -e "s/^\s*//" -e "/^#/d" >> $GITHUB_ENV
-          fi
+          cat ${{ matrix.env_file }} | sed -e "s/^\s*//" -e "/^#/d" >> $GITHUB_ENV
+
+      - name: Set up QEMU for cross-arch builds
+        uses: docker/setup-qemu-action@v2
 
       - name: Build 'autoware-universe'
         uses: ./.github/actions/docker-build-and-push
         with:
           bake-target: autoware-universe
           build-args: |
-            *.platform=linux/amd64
+            *.platform=${{ matrix.platform }}
             *.args.ROS_DISTRO=${{ env.rosdistro }}
             *.args.BASE_IMAGE=${{ env[format('{0}', matrix.base_image_env)] }}
-            *.args.SETUP_ARGS=${{ matrix.setup-args }}
+            *.args.SETUP_ARGS=${{ matrix.setup_args }}
           tag-prefix: ${{ env.rosdistro }}-
-          tag-suffix: ${{ matrix.additional-tag-suffix }}
+          tag-suffix: ${{ matrix.tag_suffix }}
 
       - name: Show disk space
         run: |
