@@ -26,4 +26,5 @@ target "runtime" {
   inherits = ["docker-metadata-action-runtime"]
   dockerfile = "docker/autoware-universe/Dockerfile"
   target = "runtime"
+  platforms = ["linux/amd64", "linux/arm64"] 
 }
