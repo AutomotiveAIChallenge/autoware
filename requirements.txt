@@ -1,0 +1,38 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# PyTorch stack (CUDA 12.1 wheels work with CUDA 12.x base images)
+torch==2.3.1
+torchvision==0.18.1
+torchaudio==2.3.1
+
+# Core scientific / utilities
+numpy==1.26.4  # satisfies numpy<2 constraint
+scipy
+pandas
+matplotlib
+plotly
+kaleido
+tensorboard
+tqdm
+tomli==2.3.0
+
+# Optimization / math
+cvxpy
+ecos
+scikit-learn
+jaxtyping
+
+# Geometry / configuration
+hydra-core
+omegaconf
+pyproj
+pyyaml
+rosbags
+
+# Computer vision / ML extras
+h5py
+hdf5plugin
+opencv-python<=4.9
+pycocotools
+ultralytics
+grad-cam

@@ -20,6 +20,7 @@ RUN mkdir -p ~/.ssh \
 # Copy files
 COPY autoware.repos setup-dev-env.sh ansible-galaxy-requirements.yaml amd64.env arm64.env /autoware/
 COPY ansible/ /autoware/ansible/
+COPY packages.txt requirements.txt /autoware/
 WORKDIR /autoware
 
 # Set up development environment
@@ -31,6 +32,17 @@ RUN --mount=type=ssh \
   && rosdep update \
   && DEBIAN_FRONTEND=noninteractive rosdep install -y --ignore-src --from-paths src --rosdistro "$ROS_DISTRO" \
   && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* "$HOME"/.cache
+
+# Install additional apt and pip dependencies
+RUN set -eux; \
+  clean_packages=$(grep -vE '^\s*#' packages.txt | sed '/^\s*$/d' || true); \
+  if [ -n "$clean_packages" ]; then \
+    apt-get update; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    echo "$clean_packages" | xargs -r -t apt-get install -y --no-install-recommends; \
+  fi; \
+  python3 -m pip install --no-cache-dir -r requirements.txt; \
+  apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* "$HOME"/.cache
 
 # Clean up unnecessary files
 RUN rm -rf \

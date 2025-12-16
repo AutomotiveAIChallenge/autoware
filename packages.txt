@@ -1,0 +1,16 @@
+# ROS tooling
+ros-humble-domain-bridge
+ros-humble-rosbag2-storage-mcap
+ros-humble-rqt-graph
+ros-humble-rqt-tf-tree
+
+# Desktop / diagnostics
+arp-scan
+iproute2
+terminator
+wmctrl
+zstd
+
+# Graphics libs
+libgl1-mesa-dri
+libgl1-mesa-glx

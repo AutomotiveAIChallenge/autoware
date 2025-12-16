@@ -102,6 +102,10 @@ To specify the platform, use the `--platform` option:
 ./docker/build.sh --platform linux/arm64
 ```
 
+### Custom dependencies
+
+The Docker build installs additional apt packages listed in `packages.txt` and Python packages listed in `requirements.txt`. Update those files to add or remove dependencies for all image targets.
+
 ## Tips
 
 ### Precautions for not using `rocker`
