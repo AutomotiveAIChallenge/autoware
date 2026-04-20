@@ -16,6 +16,10 @@ while [ "$1" != "" ]; do
         option_platform="$2"
         shift
         ;;
+    --clean-cache)
+        # Force a full rebuild, ignoring BuildKit layer/cache-mount state.
+        option_clean_cache=true
+        ;;
     *)
         args+=("$1")
         ;;
@@ -51,8 +55,15 @@ fi
 # https://github.com/docker/buildx/issues/484
 export BUILDKIT_STEP_LOG_MAX_SIZE=10000000
 
+# Reuse BuildKit layer cache + apt/pip cache mounts by default.
+# Pass --clean-cache to force a full rebuild.
+cache_flag=()
+if [ "$option_clean_cache" = "true" ]; then
+    cache_flag+=("--no-cache")
+fi
+
 set -x
-docker buildx bake --no-cache --load --progress=plain -f "$SCRIPT_DIR/autoware-universe/docker-bake.hcl" \
+docker buildx bake "${cache_flag[@]}" --load --progress=plain -f "$SCRIPT_DIR/autoware-universe/docker-bake.hcl" \
     --set "*.context=$WORKSPACE_ROOT" \
     --set "*.ssh=default" \
     --set "*.platform=$platform" \
