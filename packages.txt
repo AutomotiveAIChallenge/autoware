@@ -3,6 +3,17 @@ ros-humble-domain-bridge
 ros-humble-rosbag2-storage-mcap
 ros-humble-rqt-graph
 ros-humble-rqt-tf-tree
+ros-humble-xacro
+ros-humble-topic-tools
+ros-humble-nav2-msgs
+
+# rviz2 + dependencies (Autoware rviz plugins rely on these transitively)
+ros-humble-rviz2
+ros-humble-rviz-common
+ros-humble-rviz-default-plugins
+ros-humble-rviz-rendering
+ros-humble-rviz-ogre-vendor
+ros-humble-rviz-assimp-vendor
 
 # Desktop / diagnostics
 arp-scan
@@ -14,3 +25,17 @@ zstd
 # Graphics libs
 libgl1-mesa-dri
 libgl1-mesa-glx
+
+# Qt5 dev (for downstream rviz plugin colcon builds)
+qtbase5-dev
+qttools5-dev
+
+# GeographicLib (used by gnss_poser variants in downstream workspaces)
+libgeographic-dev
+geographiclib-tools
+
+# Boost dev headers (racingkart packages declare <depend>libboost-dev</depend>)
+libboost-dev
+
+# Python plotly for analytics scripts referenced by racingkart
+python3-plotly

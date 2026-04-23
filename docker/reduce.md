@@ -2,10 +2,19 @@
 
 ## サイズ削減結果
 
-| イメージ | Before | After | 削減 |
-| --- | --- | --- | --- |
-| **runtime** | **13.8 GB** | **8.97 GB** | **−4.8 GB (−35%)** |
-| devel | 13.8 GB | 12.1 GB | −1.7 GB (−12%) |
+| イメージ | Before | After (Dockerfile) | After (+ slim.sh) | 最終削減 |
+| --- | --- | --- | --- | --- |
+| **runtime** (= `:humble-latest`) | **13.8 GB** | **8.99 GB** | **6.5 GB** | **−7.3 GB (−53%)** |
+| devel | 13.8 GB | 12.1 GB | — | −1.7 GB (−12%) |
+
+`build.sh` は Dockerfile ビルド後に自動で `slim.sh --mode buildable` を実行し、最終 `:humble-latest-runtime` / `:humble-latest` を生成する。
+
+## slim.sh の mode
+- **`--mode buildable`** (default, デフォルト採用): colcon build 可能性を維持。gcc-11, g++-11, cmake, /usr/include, /opt/ros/humble/include, libboost*-dev, libgdal-dev, libopenblas-dev を保持。openjdk / JVM / `__pycache__` / 非英語 locale を削除。`/usr/lib/llvm-*` は CPU ホストでの Mesa swrast / rviz2 ソフトウェアレンダリングに必要なため保持 → **6.5-7.6 GB**
+- **`--mode ml-only`**: ML 学習専用。上記に加えて C/C++ toolchain と全ヘッダーを削除。rclpy もカスケードで消える（ROS 実行不可）。ML 学習コードは `rosbags` pip パッケージ経由で bag 読込するため影響なし → **5.9 GB**
+
+## 動作検証
+各 variant で `docker/test_ml_workspace.sh` により ML 学習 smoke test (torch GPU, TinyLidarNet モデル構築, 5-step 学習ループ) が PASS。
 
 > runtime には torch (cu121) を含めて GPU 推論を可能にしている。torch と同梱 CUDA ライブラリを外せば 3.81 GB まで落とせる。
 
@@ -34,8 +43,15 @@
 
 - `strip --strip-unneeded` でバイナリからシンボル削除
 - ONNX モデル (10 MB 超) 削除 — `tensorrt_yolo` の YOLO v3/v4/v5 全種 = 約 1.14 GB
-- ヘッダー (`*.h`, `*.hpp`)、静的ライブラリ (`*.a`, `*.la`)、docs、man、locale、icons、fonts、gcc、jvm、llvm 削除
+- ヘッダー (`*.h`, `*.hpp`)、静的ライブラリ (`*.a`, `*.la`)、docs、doc-base、man、info、locale、icons、fonts、gcc、jvm、llvm 削除
 - `__pycache__`、`*.pyc` 削除
+- pipx ansible venv (`/root/.local/share/pipx` 422 MB) と `/root/.ansible` 削除 — setup-dev-env.sh は sed パッチで pip install に切替えているが、pipx venv 本体は別経路で残存するため明示削除
+- `/var/log/*` 削除
+- **`--no-nvidia` 固定化**: CUDA 変種の publish を廃止
+  - torch cu121 は `nvidia-cu12` pip パッケージから全ての CUDA .so を解決するため、`/usr/local/cuda-11.6` (3.9 GB) は pytorch 動作には不要
+  - Autoware C++ の TensorRT/CUDA ノードは動作しなくなるが、本プロジェクトでは pytorch 動作のみ保証すれば十分
+  - `build.sh` から `--no-nvidia` オプションと `-cuda` サフィックスタグを削除、`Dockerfile` は `setup-dev-env.sh --no-nvidia` 固定
+  - `update-docker-manifest.yaml` から `latest-cuda` / `latest-prebuilt-cuda` エイリアス生成ジョブを削除
 
 ### 4. `.dockerignore`
 

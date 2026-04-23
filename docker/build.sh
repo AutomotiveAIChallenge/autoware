@@ -9,9 +9,6 @@ WORKSPACE_ROOT="$SCRIPT_DIR/../"
 args=()
 while [ "$1" != "" ]; do
     case "$1" in
-    --no-nvidia)
-        option_no_nvidia=true
-        ;;
     --platform)
         option_platform="$2"
         shift
@@ -26,15 +23,6 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
-
-# Set CUDA options
-if [ "$option_no_nvidia" = "true" ]; then
-    setup_args="--no-nvidia"
-    image_name_suffix=""
-else
-    setup_args="--no-cuda-drivers"
-    image_name_suffix="-cuda"
-fi
 
 # Set platform
 if [ -n "$option_platform" ]; then
@@ -62,15 +50,28 @@ if [ "$option_clean_cache" = "true" ]; then
     cache_flag+=("--no-cache")
 fi
 
+# Always build the slim --no-nvidia variant. torch cu121 is self-contained via
+# bundled nvidia-* pip packages, so /usr/local/cuda is unnecessary. Autoware C++
+# TensorRT/CUDA nodes are intentionally unsupported in this image.
 set -x
-docker buildx bake "${cache_flag[@]}" --load --progress=plain -f "$SCRIPT_DIR/autoware-universe/docker-bake.hcl" \
+docker buildx bake --allow=ssh "${cache_flag[@]}" --load --progress=plain -f "$SCRIPT_DIR/autoware-universe/docker-bake.hcl" \
     --set "*.context=$WORKSPACE_ROOT" \
     --set "*.ssh=default" \
     --set "*.platform=$platform" \
     --set "*.args.ROS_DISTRO=$rosdistro" \
     --set "*.args.BASE_IMAGE=$base_image" \
-    --set "*.args.SETUP_ARGS=$setup_args" \
-    --set "devel.tags=ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-devel$image_name_suffix" \
-    --set "prebuilt.tags=ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-prebuilt$image_name_suffix" \
-    --set "runtime.tags=ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-runtime$image_name_suffix"
+    --set "devel.tags=ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-devel" \
+    --set "prebuilt.tags=ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-prebuilt" \
+    --set "runtime.tags=ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-runtime-raw"
 set +x
+
+# Post-process: flatten + apt purge of items that Dockerfile cleanup cannot
+# physically delete (union FS whiteouts don't reclaim lower-layer bytes).
+# Produces the canonical `:humble-latest-runtime` and `:humble-latest` tags.
+RUNTIME_RAW="ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-runtime-raw"
+RUNTIME_FINAL="ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest-runtime"
+LATEST_ALIAS="ghcr.io/automotiveaichallenge/autoware-universe:$rosdistro-latest"
+
+"$SCRIPT_DIR/slim.sh" --mode buildable "$RUNTIME_RAW" "$RUNTIME_FINAL"
+docker tag "$RUNTIME_FINAL" "$LATEST_ALIAS"
+docker rmi "$RUNTIME_RAW" >/dev/null 2>&1 || true

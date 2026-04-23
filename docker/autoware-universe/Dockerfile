@@ -7,7 +7,6 @@ ARG BASE_IMAGE
 FROM $BASE_IMAGE AS base
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG ROS_DISTRO
-ARG SETUP_ARGS
 
 # Let BuildKit own the apt caches so that downloaded .deb archives and
 # package lists do NOT inflate the final image.
@@ -37,7 +36,7 @@ WORKDIR /autoware
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     sed -i 's|^pipx install --include-deps --force "ansible==6\.\*"$|python3 -m pip install "ansible==6.*"|' setup-dev-env.sh \
-  && ./setup-dev-env.sh -y --runtime $SETUP_ARGS universe \
+  && ./setup-dev-env.sh -y --runtime --no-nvidia universe \
   && python3 -m pip uninstall -y ansible ansible-core || true
 
 # Extra apt packages. These are shared by devel and runtime.
@@ -119,10 +118,15 @@ COPY --from=prebuilt /autoware/install/ /autoware/install/
 RUN set -eux; \
     find /autoware/install -type f \( -executable -o -name "*.so*" \) \
          -exec strip --strip-unneeded --remove-section=.comment --remove-section=.note {} + 2>/dev/null || true; \
-    find /usr/lib /opt/ros /autoware -type f \
-         \( -name "*.a" -o -name "*.la" -o -name "*.o" \) -delete 2>/dev/null || true; \
-    find /usr/include /opt/ros/"$ROS_DISTRO"/include /autoware/install -type f \
-         \( -name "*.h" -o -name "*.hpp" \) -delete 2>/dev/null || true; \
+    # NOTE: .a / .la files under /opt/ros and /autoware intentionally preserved.
+    # rviz_ogre_vendor ships libOgreGLSupport.a as a required static library
+    # referenced by its exported CMake targets; downstream colcon builds fail
+    # at CMake time if it is missing. Total footprint is <10 MB, not worth
+    # the reproducibility risk.
+    # Headers intentionally preserved: /usr/include (libstdc++ bits/),
+    # /opt/ros/humble/include (rclcpp/), and /autoware/install/*/include
+    # (autoware_auto_msgs, tier4_autoware_utils, ...) are required by
+    # downstream `colcon build` in aichallenge-racingkart and similar consumers.
     # Bundled ONNX models inside Autoware packages: delete large ones.
     # --no-nvidia builds cannot run TensorRT inference against them.
     find /autoware/install -type f -name "*.onnx" -size +10M -delete; \
@@ -138,16 +142,17 @@ RUN set -eux; \
       /autoware/requirements.txt \
       /autoware/autoware.repos \
       /root/.local/pipx \
+      /root/.local/share/pipx \
+      /root/.ansible \
       /root/.cache \
-      /opt/ros/"$ROS_DISTRO"/include \
-      /usr/include \
       /usr/share/doc \
+      /usr/share/doc-base \
       /usr/share/man \
+      /usr/share/info \
       /usr/share/locale \
       /usr/share/icons \
       /usr/share/backgrounds \
       /usr/share/fonts \
-      /usr/lib/gcc \
       /usr/lib/jvm \
       /usr/lib/llvm* \
       /var/log/*
