@@ -2,18 +2,20 @@
 
 ## サイズ削減結果
 
-| イメージ | Before | After (Dockerfile) | After (+ slim.sh) | 最終削減 |
-| --- | --- | --- | --- | --- |
-| **runtime** (= `:humble-latest`) | **13.8 GB** | **8.99 GB** | **6.5 GB** | **−7.3 GB (−53%)** |
-| devel | 13.8 GB | 12.1 GB | — | −1.7 GB (−12%) |
+| イメージ                         | Before      | After (Dockerfile) | After (+ slim.sh) | 最終削減           |
+| -------------------------------- | ----------- | ------------------ | ----------------- | ------------------ |
+| **runtime** (= `:humble-latest`) | **13.8 GB** | **8.99 GB**        | **6.5 GB**        | **−7.3 GB (−53%)** |
+| devel                            | 13.8 GB     | 12.1 GB            | —                 | −1.7 GB (−12%)     |
 
 `build.sh` は Dockerfile ビルド後に自動で `slim.sh --mode buildable` を実行し、最終 `:humble-latest-runtime` / `:humble-latest` を生成する。
 
 ## slim.sh の mode
+
 - **`--mode buildable`** (default, デフォルト採用): colcon build 可能性を維持。gcc-11, g++-11, cmake, /usr/include, /opt/ros/humble/include, libboost*-dev, libgdal-dev, libopenblas-dev を保持。openjdk / JVM / `__pycache__` / 非英語 locale を削除。`/usr/lib/llvm-*` は CPU ホストでの Mesa swrast / rviz2 ソフトウェアレンダリングに必要なため保持 → **6.5-7.6 GB**
 - **`--mode ml-only`**: ML 学習専用。上記に加えて C/C++ toolchain と全ヘッダーを削除。rclpy もカスケードで消える（ROS 実行不可）。ML 学習コードは `rosbags` pip パッケージ経由で bag 読込するため影響なし → **5.9 GB**
 
 ## 動作検証
+
 各 variant で `docker/test_ml_workspace.sh` により ML 学習 smoke test (torch GPU, TinyLidarNet モデル構築, 5-step 学習ループ) が PASS。
 
 > runtime には torch (cu121) を含めて GPU 推論を可能にしている。torch と同梱 CUDA ライブラリを外せば 3.81 GB まで落とせる。
@@ -79,15 +81,15 @@
 
 ## ビルド時間 (フレッシュビルド、キャッシュ無し)
 
-| ステップ | 所要時間 |
-|---------|---------|
-| setup-dev-env.sh | ~150 s |
-| apt (packages.txt) | ~10 s |
-| pip install (devel 内) | ~90 s |
-| vcs + rosdep install | ~90 s |
-| colcon build | ~10 分 |
-| runtime strip + cleanup | ~5 s |
-| **合計** | **約 20 分** |
+| ステップ                | 所要時間     |
+| ----------------------- | ------------ |
+| setup-dev-env.sh        | ~150 s       |
+| apt (packages.txt)      | ~10 s        |
+| pip install (devel 内)  | ~90 s        |
+| vcs + rosdep install    | ~90 s        |
+| colcon build            | ~10 分       |
+| runtime strip + cleanup | ~5 s         |
+| **合計**                | **約 20 分** |
 
 再ビルド時は apt/pip キャッシュマウントが効くため、これらのダウンロード分が省略される。
 

@@ -20,21 +20,30 @@ set -euo pipefail
 MODE="buildable"
 args=()
 while [ $# -gt 0 ]; do
-  case "$1" in
-    --mode) MODE="$2"; shift 2 ;;
-    *) args+=("$1"); shift ;;
-  esac
+    case "$1" in
+    --mode)
+        MODE="$2"
+        shift 2
+        ;;
+    *)
+        args+=("$1")
+        shift
+        ;;
+    esac
 done
 SRC="${args[0]:-ghcr.io/automotiveaichallenge/autoware-universe:humble-latest-runtime}"
 DST="${args[1]:-${SRC}-${MODE}}"
-[[ "$MODE" =~ ^(buildable|ml-only)$ ]] || { echo "invalid --mode: $MODE"; exit 2; }
+[[ $MODE =~ ^(buildable|ml-only)$ ]] || {
+    echo "invalid --mode: $MODE"
+    exit 2
+}
 
 echo "==> Source: $SRC"
 echo "==> Output: $DST"
 
 # Metadata to preserve across flatten.
 mapfile -t CHANGES < <(
-  docker inspect --format '
+    docker inspect --format '
 {{- range .Config.Env }}ENV {{ . }}
 {{ end -}}
 {{- range $k, $v := .Config.Labels }}LABEL {{ $k }}={{ $v }}
@@ -117,14 +126,17 @@ rm -rf /tmp/* /root/.cache /var/tmp/* 2>/dev/null || true
 
 echo "=== remaining top-level sizes (mode=$MODE) ==="
 du -sh /usr/* /opt/* /autoware/* /root/* 2>/dev/null | sort -rh | head -15
-' || { echo "cleanup failed"; exit 1; }
+' || {
+    echo "cleanup failed"
+    exit 1
+}
 
 docker stop "$CID" >/dev/null
 
 echo "==> Exporting + importing (flatten)…"
 change_args=()
 for c in "${CHANGES[@]}"; do
-  change_args+=(--change "$c")
+    change_args+=(--change "$c")
 done
 
 docker export "$CID" | docker import "${change_args[@]}" - "$DST"
@@ -132,9 +144,9 @@ docker export "$CID" | docker import "${change_args[@]}" - "$DST"
 SRC_SIZE=$(docker image inspect "$SRC" --format '{{.Size}}')
 DST_SIZE=$(docker image inspect "$DST" --format '{{.Size}}')
 printf '\n==> Size: %s (src) -> %s (dst, -%s)\n' \
-  "$(numfmt --to=iec "$SRC_SIZE")" \
-  "$(numfmt --to=iec "$DST_SIZE")" \
-  "$(numfmt --to=iec "$((SRC_SIZE - DST_SIZE))")"
+    "$(numfmt --to=iec "$SRC_SIZE")" \
+    "$(numfmt --to=iec "$DST_SIZE")" \
+    "$(numfmt --to=iec "$((SRC_SIZE - DST_SIZE))")"
 
 echo "==> Smoke test: torch + rclpy + colcon/gcc availability"
 docker run --rm --entrypoint bash "$DST" -c '

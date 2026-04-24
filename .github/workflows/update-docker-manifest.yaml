@@ -34,4 +34,3 @@ jobs:
           package-name: autoware-universe
           rosdistro: ${{ needs.load-env.outputs.rosdistro }}
           tag-name: latest-prebuilt
-
