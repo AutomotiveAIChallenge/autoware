@@ -1,0 +1,30 @@
+# Build artifacts that would otherwise be uploaded to the Docker daemon
+# on every build (multi-GB). The Dockerfile only COPYs a handful of files
+# from the context, so anything not listed in the COPY directives can be
+# excluded.
+build/
+install/
+log/
+
+# Source tree. The Dockerfile fetches it via `vcs import` inside the
+# devel stage using autoware.repos, so the local src/ is never needed
+# in the build context.
+src/
+
+# VCS and CI metadata
+.git/
+.github/
+
+# Editor / IDE state
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local docs that are not consumed by the build
+*.md
+LICENSE
+NOTICE
+DISCLAIMER.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
