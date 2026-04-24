@@ -37,7 +37,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     sed -i 's|^pipx install --include-deps --force "ansible==6\.\*"$|python3 -m pip install "ansible==6.*"|' setup-dev-env.sh \
   && ./setup-dev-env.sh -y --runtime --no-nvidia universe \
-  && python3 -m pip uninstall -y ansible ansible-core || true
+  && { python3 -m pip uninstall -y ansible ansible-core || true; }
 
 # Extra apt packages. These are shared by devel and runtime.
 # Heavy pip packages go into the devel stage only (see below) so that
@@ -70,6 +70,7 @@ FROM base AS devel
 # Heavy pip packages (torch, nvidia, ultralytics, plotly, pandas, ...) are
 # installed here so they ship with devel/prebuilt but NOT with runtime.
 COPY requirements.txt /autoware/
+# hadolint ignore=DL3042
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install -r requirements.txt
 
