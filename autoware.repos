@@ -19,7 +19,7 @@ repositories:
   core/external/autoware_auto_msgs: # TODO(mfc): Remove when autoware_msgs is merged
     type: git
     url: https://github.com/tier4/autoware_auto_msgs.git
-    version: f6642370c6f4f42a5dc0b6c1fc4a21396d4dc34c
+    version: 1e8b6d234e2690c9da386f006bb60835cdccddfd
   # universe
   universe/autoware.universe:
     type: git
